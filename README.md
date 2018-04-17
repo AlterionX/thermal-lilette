@@ -47,8 +47,11 @@ Explosion Particle System
   
 **Test 3.1: set phi/H'/f constant -> gas portal**
 
-- [ ] Feldman's model II
-  - [ ] Combustion: d phi/H'/f + s (soot?)
+- [ ] Feldman's model II: Combustion
+  - [ ] Velocity div: d phi
+  - [ ] Heat transfer: H'
+  - [ ] External force: f
+  - [ ] Soot: s (maybe?)
   
 **Test 3.2: explosion!**
 
