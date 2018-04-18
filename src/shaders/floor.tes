@@ -1,0 +1,35 @@
+R"zzz(#version 410 core
+layout (vertices = 4) in;
+
+uniform sampler2D ter_height;
+
+in vec4 t_light_direction[];
+in vec4 t_camera_direction[];
+in vec4 t_normal[];
+in vec2 t_uv[];
+
+out vec4 vs_light_direction;
+out vec4 vs_camera_direction;
+out vec4 vs_normal;
+out vec2 vs_uv;
+
+vec4 mix_vec4(vec4[4] vs) {
+    vec4 p1 = mix(vs[0], vs[3], gl_TessCoord.x);
+    vec4 p2 = mix(vs[1], vs[2], gl_TessCoord.x);
+    return mix(p1, p2, gl_TessCoord.y);
+}
+
+void main(void) {
+    vs_light_direction = mix_vec4(t_light_direction);
+    vs_camera_direction = mix_vec4(t_camera_direction);
+	vs_normal = mix_vec4(t_normal);
+
+	vec2 uv0 = mix(t_uv[0], t_uv[1], gl_TessCoord.x);
+	vec2 uv1 = mix(t_uv[1], t_uv[2], gl_TessCoord.x);
+	vs_uv = mix(uv0, uv1, gl_TessCoord.y);
+
+    vec4 p1 = mix(gl_in[0].gl_Position, gl_in[3].gl_Position, gl_TessCoord.x);
+    vec4 p2 = mix(gl_in[1].gl_Position, gl_in[2].gl_Position, gl_TessCoord.x);
+    gl_Position = mix(p1, p2, gl_TessCoord.y) + vec4(0.0, texture(ter_height, vs_uv).x, 0.0, 0.0);
+
+})zzz";

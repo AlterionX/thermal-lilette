@@ -1,0 +1,32 @@
+R"zzz(#version 410 core
+layout (vertices = 4) out;
+
+in vec4 vs_light_direction[];
+in vec4 vs_camera_direction[];
+in vec4 vs_normal[];
+in vec2 vs_uv[];
+
+out vec4 t_light_direction[];
+out vec4 t_camera_direction[];
+out vec4 t_normal[];
+out vec2 t_uv[];
+
+void main(void){
+    if (gl_InvocationID == 0){
+        // set tess levels
+        gl_TessLevelInner[0] = 5;
+        gl_TessLevelInner[1] = 5;
+
+        gl_TessLevelOuter[0] = 6;
+        gl_TessLevelOuter[1] = 6;
+        gl_TessLevelOuter[2] = 6;
+        gl_TessLevelOuter[3] = 6;
+    }
+    gl_out[gl_InvocationID].gl_Position = gl_in[gl_InvocationID].gl_Position;
+
+    t_light_direction[gl_InvocationID] = vs_light_direction[gl_InvocationID];
+    t_camera_direction[gl_InvocationID] = vs_camera_direction[gl_InvocationID];
+    t_normal[gl_InvocationID] = vs_normal[gl_InvocationID];
+    t_uv[gl_InvocationID] = vs_uv[gl_InvocationID];
+
+})zzz"
