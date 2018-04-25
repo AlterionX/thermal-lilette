@@ -178,8 +178,6 @@ int main(int argc, char* argv[]) {
             glDepthFunc(GL_LESS);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glCullFace(GL_BACK);
-            
-                std::cout << "is it here?" << std::endl;
 
             // render floor
             floor_pass.setup();
