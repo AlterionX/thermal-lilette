@@ -3,7 +3,6 @@
 #include "config.h"
 #include "prim_mesh.h"
 #include "gui.h"
-#include "terrain.h"
 
 #include <memory>
 #include <algorithm>
@@ -61,10 +60,10 @@ int main(int argc, char* argv[]) {
     gui_lite.startup();
 
     // Meshes and instances
-    auto cube_meshi = geom::c_cube(glm::vec3(0.0f), 1000.0f);
+    auto floor_meshi = geom::c_floor();
     
     // Data binders
-    auto cube_model_mat_data = [&cube_meshi](std::vector<glm::mat4>& data){ data[0] = cube_meshi.m_mat(); }; // This return model matrix for the floor.
+    auto floor_model_mat_data = [&floor_meshi](std::vector<glm::mat4>& data){ data[0] = floor_meshi.m_mat(); }; // This return model matrix for the floor.
 
     auto view_mat_data = [&gui_lite](std::vector<glm::mat4>& data){ data[0] = gui_lite.g_cam().vm(); };
     auto proj_mat_data = [](std::vector<glm::mat4>& data){ data[0] = glm::perspective((float) (kFov * (M_PI / 180.0f)), float(window_width) / window_height, kNear, kFar); };
@@ -79,7 +78,7 @@ int main(int argc, char* argv[]) {
     
     // Shader uniforms
     std::cout << "Creating shader uniforms..." << std::endl;
-    auto su_m_mat_cube = std::make_shared<rpa::CachedSU<glm::mat4, 1>>("model", rpa::UType::fm(4), cube_model_mat_data);
+    auto su_m_mat_floor = std::make_shared<rpa::CachedSU<glm::mat4, 1>>("model", rpa::UType::fm(4), floor_model_mat_data);
     
     auto su_v_mat = std::make_shared<rpa::CachedSU<glm::mat4, 1>>("view", rpa::UType::fm(4), view_mat_data);
     auto su_p_mat = std::make_shared<rpa::CachedSU<glm::mat4, 1>>("projection", rpa::UType::fm(4), proj_mat_data);
@@ -93,16 +92,16 @@ int main(int argc, char* argv[]) {
     auto su_shi_sh = std::make_shared<rpa::CachedSU<float, 1>>("shininess", rpa::UType::fs(), shininess_data);
     std::cout << "... done." << std::endl;
 
-    // Cube render pass
-    std::cout << "Creating cube RenderPass..." << std::endl;
-    rpa::RenderDataInput cube_pass_input;
-    cube_pass_input.assign(0, "vertex_position", cube_meshi.m()->g_verts().data(), cube_meshi.m()->g_verts().size(), 4, GL_FLOAT);
-    cube_pass_input.assignIndex(cube_meshi.m()->g_faces().data(), cube_meshi.m()->g_faces().size(), 3);
-    rpa::RenderPass cube_pass(
+    // floor render pass
+    std::cout << "Creating floor RenderPass..." << std::endl;
+    rpa::RenderDataInput floor_pass_input;
+    floor_pass_input.assign(0, "vertex_position", floor_meshi.m()->g_verts().data(), floor_meshi.m()->g_verts().size(), 4, GL_FLOAT);
+    floor_pass_input.assignIndex(floor_meshi.m()->g_faces().data(), floor_meshi.m()->g_faces().size(), 3);
+    rpa::RenderPass floor_pass(
         -1,
-        cube_pass_input,
+        floor_pass_input,
         {flat_vert_shader, NULL, NULL, geometry_shader, flat_frag_shader},
-        {su_m_mat_cube, su_v_mat, su_p_mat, su_l_pos, su_cam_pos, su_dif_sh, su_amb_sh, su_spe_sh, su_shi_sh},
+        {su_m_mat_floor, su_v_mat, su_p_mat, su_l_pos, su_cam_pos, su_dif_sh, su_amb_sh, su_spe_sh, su_shi_sh},
         {"fragment_color"}
     );
     std::cout << "... done." << std::endl;
@@ -129,11 +128,11 @@ int main(int argc, char* argv[]) {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glCullFace(GL_BACK);
 
-            // render cube
-            cube_pass.setup();
+            // render floor
+            floor_pass.setup();
             CHECK_GL_ERROR(glDrawElements(
                     GL_TRIANGLES,
-                    cube_meshi.m()->g_faces().size() * 3,
+                    floor_meshi.m()->g_faces().size() * 3,
                     GL_UNSIGNED_INT, 0
             ));
 
