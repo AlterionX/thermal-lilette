@@ -235,6 +235,8 @@ namespace rpa {
             std::vector<std::shared_ptr<ShaderUniform>>& uniforms,
             const std::vector<unsigned>& unilocs
         );
+    public:
+        const unsigned g_sp(void) const { return sp_; };
     };
 
 }

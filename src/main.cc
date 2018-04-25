@@ -3,6 +3,7 @@
 #include "config.h"
 #include "prim_mesh.h"
 #include "gui.h"
+#include "particle_sys.h"
 
 #include <memory>
 #include <algorithm>
@@ -47,6 +48,14 @@ const char* flat_frag_shader =
 #include "shaders/flat.frag"
 ;
 
+const char* instanced_vertex_shader = 
+#include "shaders/instanced.vert"
+;
+
+const char* instanced_geometry_shader = 
+#include "shaders/instanced.geom"
+;
+
 int main(int argc, char* argv[]) {
     auto igdm = gdm::GDManager::inst(window_width, window_height, window_title);
     if (igdm.first) {
@@ -61,9 +70,15 @@ int main(int argc, char* argv[]) {
 
     // Meshes and instances
     auto floor_meshi = geom::c_floor();
+    auto psys = psy::ParticleSystem();
     
     // Data binders
     auto floor_model_mat_data = [&floor_meshi](std::vector<glm::mat4>& data){ data[0] = floor_meshi.m_mat(); }; // This return model matrix for the floor.
+    
+    std::vector<glm::mat4> psys_model_mat_data(1000);
+    for (int i = 0; i < psys.g_count(); ++i) {
+        psys_model_mat_data[i] = glm::translate(glm::vec3(0.0f, 0.0f, 1.0f * i));
+    }
 
     auto view_mat_data = [&gui_lite](std::vector<glm::mat4>& data){ data[0] = gui_lite.g_cam().vm(); };
     auto proj_mat_data = [](std::vector<glm::mat4>& data){ data[0] = glm::perspective((float) (kFov * (M_PI / 180.0f)), float(window_width) / window_height, kNear, kFar); };
@@ -106,6 +121,42 @@ int main(int argc, char* argv[]) {
     );
     std::cout << "... done." << std::endl;
 
+    // psys render pass
+    std::cout << "Creating psys RenderPass..." << std::endl;
+    rpa::RenderDataInput psys_pass_input;
+    psys_pass_input.assign(0, "vertex_position", psys.g_meshi().m()->g_verts().data(), psys.g_meshi().m()->g_verts().size(), 4, GL_FLOAT);
+    psys_pass_input.assignIndex(psys.g_meshi().m()->g_faces().data(), psys.g_meshi().m()->g_faces().size(), 3);
+    rpa::RenderPass psys_pass(
+        -1,
+        psys_pass_input,
+        {instanced_vertex_shader, NULL, NULL, instanced_geometry_shader, flat_frag_shader},
+        {su_v_mat, su_p_mat, su_l_pos, su_cam_pos, su_dif_sh, su_amb_sh, su_spe_sh, su_shi_sh},
+        {"fragment_color"}
+    );
+    // particle ubo
+    const int PSYS_MODEL_UBO_ARR_SIZE = 1000;
+    GLuint psys_model_ubo;
+    gdm::qd([&] GDM_OP {
+        CHECK_GL_ERROR(glGenBuffers(1, &psys_model_ubo));
+        CHECK_GL_ERROR(glBindBuffer(GL_UNIFORM_BUFFER, psys_model_ubo));
+        CHECK_GL_ERROR(glBufferData(
+            GL_UNIFORM_BUFFER,
+            sizeof(float) * 4 * 4 * PSYS_MODEL_UBO_ARR_SIZE,
+            psys_model_mat_data.data(),
+            GL_STATIC_DRAW
+        ));
+    });
+    GLuint psys_model_blk_idx;
+    gdm::qd([&] GDM_OP {
+        std::cout << "linked program id: " << psys_pass.g_sp() << std::endl;
+        CHECK_GL_ERROR(psys_model_blk_idx = glGetUniformBlockIndex(psys_pass.g_sp(), "models"));
+        // bind ubo, at last
+        std::cout << "uniform block id: " << psys_model_blk_idx << std::endl;
+        CHECK_GL_ERROR(glUniformBlockBinding(psys_pass.g_sp(), psys_model_blk_idx, 0));
+        CHECK_GL_ERROR(glBindBufferBase(GL_UNIFORM_BUFFER, 0, psys_model_ubo));
+    });
+    std::cout << "... done." << std::endl;
+
     // main loop
     while (![&](void)->bool{
         bool should_close = false;
@@ -127,6 +178,8 @@ int main(int argc, char* argv[]) {
             glDepthFunc(GL_LESS);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glCullFace(GL_BACK);
+            
+                std::cout << "is it here?" << std::endl;
 
             // render floor
             floor_pass.setup();
@@ -135,6 +188,18 @@ int main(int argc, char* argv[]) {
                     floor_meshi.m()->g_faces().size() * 3,
                     GL_UNSIGNED_INT, 0
             ));
+
+            if (psys.is_active()) {
+                // render psys instanced
+                psys_pass.setup();
+                CHECK_GL_ERROR(glDrawElementsInstanced(
+                    GL_TRIANGLES,
+                    psys.g_meshi().m()->g_faces().size(),
+                    GL_UNSIGNED_INT,
+                    0,
+                    psys.g_count()
+                ));
+            }
 
             glfwSwapBuffers(window);
 
