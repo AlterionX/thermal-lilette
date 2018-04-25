@@ -29,7 +29,7 @@ void main() {
     vec3 u = normalize(b - a);
     vec3 v = normalize(c - a);
     face_normal = normalize(vec4(normalize(cross(u, v)), 0.0));
-    mat4 model = models[0];
+    mat4 model = models[vs_inst_id[0]];
     for (n = 0; n < gl_in.length(); n++) {
         light_direction = normalize(vs_light_direction[n]);
         camera_direction = normalize(vs_camera_direction[n]);

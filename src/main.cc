@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
     GLuint psys_model_blk_idx;
     gdm::qd([&] GDM_OP {
         std::cout << "linked program id: " << psys_pass.g_sp() << std::endl;
-        CHECK_GL_ERROR(psys_model_blk_idx = glGetUniformBlockIndex(psys_pass.g_sp(), "models"));
+        CHECK_GL_ERROR(psys_model_blk_idx = glGetUniformBlockIndex(psys_pass.g_sp(), "models_array_block"));
         // bind ubo, at last
         std::cout << "uniform block id: " << psys_model_blk_idx << std::endl;
         CHECK_GL_ERROR(glUniformBlockBinding(psys_pass.g_sp(), psys_model_blk_idx, 0));
