@@ -6,45 +6,76 @@
 #include "mesh.h"
 
 #include <chrono>
+#include <ratio>
+
 #include <glm/glm.hpp>
 
 namespace psy {
-    typedef std::chrono::duration<double> life_time_t;
+    typedef std::chrono::duration<float, std::milli> lt_t;
+    
     struct Particle {
-        glm::vec3 velocity;
-        glm::vec3 position;
-        double mass;
-        life_time_t time_alive;
+        glm::vec3 v_; // velocity, m /ms
+        glm::vec3 p_; // position, m
+        float m_; // mass, g
+        lt_t alive_; // alive, ms
         
-        void apply_force(const glm::vec3& force);
-        glm::mat4 grab_transform(void) const;
+        // force: kg * m / s^2 | duration: ms
+        void push(const glm::vec3& force, const lt_t& duration);
+        // elapsed: ms
+        void simulate(lt_t elapsed);
+
+        glm::mat4 g_mm(void) const;
     };
+
     class ParticleSystem {
-        Particle paritcles[1000];
-        life_time_t p_life_time;
-        geom::TMeshI particle_meshi;
+        // basic simulation data
+        std::vector<Particle> ps_;
+        std::vector<glm::mat4> pmm_;
+        geom::TMeshI pmi_;
+        lt_t plt_; // ms
+
+        // system management
+        bool active_;
+        bool grav_;
         
-        // Get the force at a point
-        glm::vec3 g_force(const glm::vec3& pos) const;
+        void reset_p(Particle& p);
+        void reset_ps(void);
+        // pos: m
+        glm::vec3 force_at(const glm::vec3& pos) const;
         
     public:
-        ParticleSystem();
+        ParticleSystem(int cnt);
+
+        ParticleSystem() : ParticleSystem(1024) {}
         ParticleSystem(const ParticleSystem& copy) = default;
         ParticleSystem& operator=(const ParticleSystem& copy) = default;
         ParticleSystem(ParticleSystem&& move) = default;
         ParticleSystem& operator=(ParticleSystem&& move) = default;
         ~ParticleSystem() = default;
 
-        // particle system's particle lifetimes
-        void s_life_time(life_time_t lt);
-        life_time_t g_life_time(void) const { return p_life_time; }
-        
-        // Advance each particle the provided time elapsed
-        void advance(const life_time_t elapsed);
+        // primary mathod, advances the simulation to the next step
+        // elapsed: ms
+        void step(const lt_t& elapsed);
 
-        int g_count(void) { return 1000; }
-        bool is_active(void) { return true; }
-        geom::TMeshI& g_meshi(void) { return particle_meshi; }
+        // set particle data
+        // lt: ms
+        void s_plt(const lt_t& lt);
+
+        // set system config
+        void toggle_active(void) { active_ = !active_; }
+        void s_active(bool active) { active_ = active; }
+        void toggle_grav(void) { grav_ = !grav_; }
+        void s_grav(bool grav) { grav_ = grav; }
+
+        // grab particle data
+        size_t g_pcnt(void) const { return ps_.size(); }
+        const std::vector<glm::mat4>& g_pmm(void) const { return pmm_; }
+        const lt_t& g_plt(void) const { return plt_; }
+        geom::TMeshI& g_pmi(void) { return pmi_; }
+
+        // grab system config
+        bool is_active(void) { return active_; }
+        bool is_grav(void) { return grav_; }
     };
 }
 

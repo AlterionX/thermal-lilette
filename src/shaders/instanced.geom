@@ -21,6 +21,7 @@ out vec4 camera_direction;
 out vec4 world_position;
 out vec4 vertex_normal;
 out vec2 uv_coords;
+out vec3 boundary;
 void main() {
     int n = 0;
     vec3 a = gl_in[0].gl_Position.xyz;
@@ -36,6 +37,7 @@ void main() {
         world_position = gl_in[n].gl_Position;
         vertex_normal = vs_normal[n];
         uv_coords = vs_uv[n];
+        boundary = vec3(float(n == 0), float(n == 1), float(n == 2));
         gl_Position = projection * view * model * gl_in[n].gl_Position;
         EmitVertex();
     }

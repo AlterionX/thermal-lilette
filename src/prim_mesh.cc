@@ -11,6 +11,16 @@
 
 namespace geom {
     namespace {
+        //
+        //  4--------7
+        // /|       /|
+        //3--------0 |
+        //| |      | |
+        //| |      | |
+        //| 5------|-6
+        //|/       |/
+        //2--------1
+        //
         auto rect_prism = std::make_shared<TMesh>(std::vector<glm::vec4>{
             glm::vec4(0.5f, 0.5f, 0.5f, 1.0f), // top, right, out
             glm::vec4(0.5f, -0.5f, 0.5f, 1.0f), // bottom, ro
@@ -31,8 +41,8 @@ namespace geom {
             glm::uvec3(7, 0, 1), // rb
             glm::uvec3(7, 4, 0), // top t
             glm::uvec3(3, 0, 4), // tb
-            glm::uvec3(1, 2, 6), // bottom t
-            glm::uvec3(5, 6, 2) // bb
+            glm::uvec3(1, 2, 5), // bottom t
+            glm::uvec3(1, 5, 6)  // bb
         }, std::vector<glm::vec4>{}, std::vector<glm::vec2>{}, std::vector<std::shared_ptr<Material>>{});
         auto plane = std::make_shared<TMesh>(std::vector<glm::vec4>{
             glm::vec4(0.5f, 0.0f, 0.5f, 1.0f),

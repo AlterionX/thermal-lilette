@@ -45,7 +45,7 @@ bool GDManager::process(void) {
         if (DEBUG) std::cout << "trying to poll..." << std::endl;
         if (dq.empty()) {
             if (DEBUG) std::cout << "found nothing" << std::endl;
-            return false;
+            return false; // should use a cond_var
         }
         k = dq.front();
         dq.pop();
@@ -112,7 +112,9 @@ void GDManager::end(void) {
 }
 
 void GDManager::dispatch(gdm_call_t f, bool wait_til_complete) {
-    if (wait_til_complete) {
+    if (glfw_thread.get_id() == std::this_thread::get_id()) { // TODO make this aware of wait_til_complete
+        f();
+    } else if (wait_til_complete) {
         std::mutex cw_lk;
         std::unique_lock<std::mutex> cw_ulk(cw_lk);
         bool comp = false;
