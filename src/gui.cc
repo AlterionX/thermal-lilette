@@ -538,32 +538,11 @@ void GUILite::register_cbs(void) {
         [&] TD_LAMBDA { cam.trans(glm::vec3(0.0f, float(-dt.count() / move_frac), 0.0f)); }
     );
 
-    // time speed up
+    // forward gas model
     ioman.rcb_i(
         iom::IOReq {iom::kb_k('.') , iom::MODE::RELEASE},
         [&] TI_LAMBDA {
-            time_speed_ = glm::clamp(time_speed_ * 2.0f, 0.0078125f, 128.0f);
-        }
-    );
-    // time speed down
-    ioman.rcb_i(
-        iom::IOReq {iom::kb_k(',') , iom::MODE::RELEASE},
-        [&] TI_LAMBDA {
-            time_speed_ = glm::clamp(time_speed_ / 2.0f, 0.0078125f, 128.0f);
-        }
-    );
-    // cloud up
-    ioman.rcb_i(
-        iom::IOReq {iom::kb_k('.', GLFW_MOD_CONTROL) , iom::MODE::RELEASE},
-        [&] TI_LAMBDA {
-            cloud_freq_ = glm::clamp(cloud_freq_ - 50.0, 200.0, 2500.0);
-        }
-    );
-    // cloud down
-    ioman.rcb_i(
-        iom::IOReq {iom::kb_k(',', GLFW_MOD_CONTROL) , iom::MODE::RELEASE},
-        [&] TI_LAMBDA {
-            cloud_freq_ = glm::clamp(cloud_freq_ + 50.0, 200.0, 2500.0);
+            gas_dt = 0.0001;
         }
     );
     // camera

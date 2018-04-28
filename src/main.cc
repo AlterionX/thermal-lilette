@@ -4,6 +4,7 @@
 #include "prim_mesh.h"
 #include "gui.h"
 #include "particle_sys.h"
+#include "gas_stuff.h"
 
 #include <memory>
 #include <algorithm>
@@ -60,6 +61,44 @@ const char* instanced_frag_shader =
 #include "shaders/instanced.frag"
 ;
 
+
+const char* volume_vert_shader = 
+#include "shaders/volume.vert"
+;
+
+const char* volume_frag_shader = 
+#include "shaders/volume.frag"
+;
+
+void initBindTex3D(GLuint& tex_id, char* tex3d, glm::ivec3 size) {
+    gdm::qd([&] GDM_OP {
+        CHECK_GL_ERROR(glGenTextures(1, &tex_id));
+        CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, tex_id));
+        // CHECK_GL_ERROR(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE));
+        CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
+        CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
+        CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER));
+        CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+
+        CHECK_GL_ERROR(glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, 
+                            size.x, size.y , size.z, 0,
+                            GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)tex3d));
+        CHECK_GL_ERROR(glBindTexture( GL_TEXTURE_3D, 0));
+
+        std::cout << "register tex3d at " << tex_id << std::endl;
+    });
+}
+
+void updateTex3D(GLuint& tex_id, char* tex3d, glm::ivec3 size) {   
+    CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, tex_id));
+    CHECK_GL_ERROR(glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0,
+                        size.x, size.y, size.z, 
+                        GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)tex3d));
+    CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, 0));
+}
+
+
 int main(int argc, char* argv[]) {
     auto igdm = gdm::GDManager::inst(window_width, window_height, window_title);
     if (igdm.first) {
@@ -75,6 +114,14 @@ int main(int argc, char* argv[]) {
     // Meshes and instances
     auto floor_meshi = geom::c_floor();
     auto psys = psy::ParticleSystem();
+
+    // Gas Model
+    auto gas_model = GasModel(glm::ivec3(32, 32, 32));
+    char* gas_raw_tex = gas_model.get_tex3d();
+    float focus_layer = 0.0f;
+    GLuint gas_tex_id;
+    initBindTex3D(gas_tex_id, gas_raw_tex, gas_model.get_size());
+    auto gas_cube_meshi = geom::c_plane();
     
     // Data binders
     auto floor_model_mat_data = [&floor_meshi](std::vector<glm::mat4>& data){ data[0] = floor_meshi.m_mat(); }; // This return model matrix for the floor.
@@ -90,6 +137,9 @@ int main(int argc, char* argv[]) {
     auto specular_data = [](std::vector<glm::vec4>& data){ data[0] = glm::vec4(0.5f, 0.2f, 0.3f, 1.0f); };
     auto shininess_data = [](std::vector<float>& data){ data[0] = 50.0f; };
     
+    auto tex3d_layer_data = [&focus_layer](std::vector<float>& data){ data[0] = focus_layer; };
+    // auto voxtex_data = [](std::vector<char*>& data){ data[0] = focus_layer; };
+    
     // Shader uniforms
     std::cout << "Creating shader uniforms..." << std::endl;
     auto su_m_mat_floor = std::make_shared<rpa::CachedSU<glm::mat4, 1>>("model", rpa::UType::fm(4), floor_model_mat_data);
@@ -104,12 +154,17 @@ int main(int argc, char* argv[]) {
     auto su_spe_sh = std::make_shared<rpa::CachedSU<glm::vec4, 1>>("specular", rpa::UType::fv(4), specular_data);
     auto su_amb_sh = std::make_shared<rpa::CachedSU<glm::vec4, 1>>("ambient", rpa::UType::fv(4), ambient_data);
     auto su_shi_sh = std::make_shared<rpa::CachedSU<float, 1>>("shininess", rpa::UType::fs(), shininess_data);
+        
+    auto su_t3dl_pos = std::make_shared<rpa::CachedSU<float, 1>>("tex3d_layer", rpa::UType::fs(), tex3d_layer_data);
+    // auto sampler = std::make_shared<CachedSU<intptr_t, 1>>("textureSampler", UType::ts(2), sampler_data);
+
     std::cout << "... done." << std::endl;
 
     // floor render pass
     std::cout << "Creating floor RenderPass..." << std::endl;
     rpa::RenderDataInput floor_pass_input;
     floor_pass_input.assign(0, "vertex_position", floor_meshi.m()->g_verts().data(), floor_meshi.m()->g_verts().size(), 4, GL_FLOAT);
+    floor_pass_input.assign(1, "uv", floor_meshi.m()->g_texcs().data(), floor_meshi.m()->g_texcs().size(), 2, GL_FLOAT);
     floor_pass_input.assignIndex(floor_meshi.m()->g_faces().data(), floor_meshi.m()->g_faces().size(), 3);
     rpa::RenderPass floor_pass(
         -1,
@@ -130,6 +185,20 @@ int main(int argc, char* argv[]) {
         psys_pass_input,
         {instanced_vert_shader, NULL, NULL, instanced_geom_shader, instanced_frag_shader},
         {su_v_mat, su_p_mat, su_l_pos, su_cam_pos, su_dif_sh, su_amb_sh, su_spe_sh, su_shi_sh},
+        {"fragment_color"}
+    );
+
+    // psys render pass
+    std::cout << "Creating volume RenderPass..." << std::endl;
+    rpa::RenderDataInput volume_pass_input;
+    volume_pass_input.assign(0, "vertex_position", gas_cube_meshi.m()->g_verts().data(), gas_cube_meshi.m()->g_verts().size(), 4, GL_FLOAT);
+    volume_pass_input.assign(1, "uv", gas_cube_meshi.m()->g_texcs().data(), gas_cube_meshi.m()->g_texcs().size(), 2, GL_FLOAT);
+    volume_pass_input.assignIndex(gas_cube_meshi.m()->g_faces().data(), gas_cube_meshi.m()->g_faces().size(), 3);
+    rpa::RenderPass volume_pass(
+        -1,
+        volume_pass_input,
+        {volume_vert_shader, NULL, NULL, geometry_shader, volume_frag_shader},
+        {su_m_mat_floor, su_v_mat, su_p_mat, su_l_pos, su_cam_pos, su_dif_sh, su_amb_sh, su_spe_sh, su_shi_sh, su_t3dl_pos},
         {"fragment_color"}
     );
 
@@ -214,6 +283,26 @@ int main(int argc, char* argv[]) {
                     psys.g_pcnt()
                 ));
             }
+
+            // render 3d tex, face up
+            if(gui_lite.gas_dt > 1e-6) {
+                gas_model.simulate_step(gui_lite.gas_dt);
+                // gui_lite.gas_dt = 0.0;
+            }
+            gas_raw_tex = gas_model.get_tex3d();
+            updateTex3D(gas_tex_id, gas_raw_tex, gas_model.get_size());
+            for(focus_layer=-1.0f; focus_layer<=1.0f; focus_layer+=0.005f) {
+                // std::cout << "render 3d texture: " << focus_layer << std::endl;
+                volume_pass.setup();
+                CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, gas_tex_id));
+                CHECK_GL_ERROR(glDrawElements(
+                        GL_TRIANGLES,
+                        gas_cube_meshi.m()->g_faces().size() * 3,
+                        GL_UNSIGNED_INT, 0
+                ));
+                CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, 0));
+            }
+
 
             glfwSwapBuffers(window);
 

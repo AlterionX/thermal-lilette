@@ -45,14 +45,23 @@ namespace geom {
             glm::uvec3(1, 5, 6)  // bb
         }, std::vector<glm::vec4>{}, std::vector<glm::vec2>{}, std::vector<std::shared_ptr<Material>>{});
         auto plane = std::make_shared<TMesh>(std::vector<glm::vec4>{
-            glm::vec4(0.5f, 0.0f, 0.5f, 1.0f),
-            glm::vec4(0.5f, 0.0f, -0.5f, 1.0f),
-            glm::vec4(-0.5f, 0.0f, -0.5f, 1.0f),
-            glm::vec4(-0.5f, 0.0f, 0.5f, 1.0f)
+            glm::vec4(1.00f, 0.0f, 1.00f, 1.0f),
+            glm::vec4(1.00f, 0.0f, -1.00f, 1.0f),
+            glm::vec4(-1.00f, 0.0f, -1.00f, 1.0f),
+            glm::vec4(-1.00f, 0.0f, 1.00f, 1.0f)
         }, std::vector<glm::uvec3>{
             glm::uvec3(0, 1, 2),
             glm::uvec3(0, 2, 3)
-        }, std::vector<glm::vec4>{}, std::vector<glm::vec2>{}, std::vector<std::shared_ptr<Material>>{});
+        }, std::vector<glm::vec4>{
+
+        }, std::vector<glm::vec2>{
+            glm::vec2(0.0f, 1.0f),
+            glm::vec2(1.0f, 1.0f),
+            glm::vec2(1.0f, 0.0f),
+            glm::vec2(0.0f, 0.0f)
+        }, std::vector<std::shared_ptr<Material>>{
+            
+        });
         auto floor_plane = std::make_shared<TMesh>(std::vector<glm::vec4>{
             glm::vec4(kFloorXMin, kFloorY, kFloorZMax, 1.0f),
             glm::vec4(kFloorXMax, kFloorY, kFloorZMax, 1.0f),

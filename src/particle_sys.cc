@@ -34,7 +34,7 @@ namespace psy {
     }
 
     void ParticleSystem::reset_p(Particle& p) {
-        std::cout << "reset" << std::endl;
+        // std::cout << "reset" << std::endl;
         p.v_ = glm::vec3(); // TODO insert initial velocity
         p.p_ = glm::vec3(); // TODO insert arbitrary start
         p.m_ = 1.0f; // TODO insert variable/random mass
