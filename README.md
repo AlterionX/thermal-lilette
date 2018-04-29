@@ -35,10 +35,15 @@ Explosion Particle System
 **Test 1: water fountain, bubbles**
 
 ### Tools
-- [ ] Click/drag interaction: create particle at positions
-- [ ] Visualization: coloring 3D texture (alpha blending? projection plane?)
+- [ ] Design interface for scene creations
+  - [ ] Click/drag interaction: create particle at positions
+- [x] Visualization of 3D texture: alpha blending projection plane
+  - [ ] Adaptive plane projection
 
 **Test 2: water vapour in turbulence**
+
+### Gas simulation
+- [x] Navier-Strokes Equation with u', x'
 
 ### Explosion simulation
 - [ ] Feldman's model I
