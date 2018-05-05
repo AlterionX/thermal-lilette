@@ -70,6 +70,49 @@ GasModel::GasModel(glm::ivec3 sz) : size(sz), tex3d(sz.x*sz.y*sz.z*4, 0),
     //         vel_w_s[at(1, y, z)] = 1e8;
     //         vel_w_s[at(size.x-2, y, z)] = -1e8;
     //     }
+
+    // Init opengl resources for optimization
+    // compute shaders and programs
+    for (int i = 0; i < 6; ++i) {
+        shader_ids_[i] = glCreateShader(GL_COMPUTE_SHADER);
+        glShaderSource(shader_ids_[i], 1, &shader_srcs_[i], 0);
+        glCompileShader(shader_ids_[i]);
+
+        prog_ids_[p] = glCreateProgram();
+        glAttachShader(prog_ids_[i], shader_ids_[i]);
+        glLinkProgram(prog_ids_[i]);
+        CHECK_GL_PROGRAM_ERROR(prog_ids_[i]);
+    }
+    // uniforms
+    adsrc_dt_uniloc_ = glGetUniformLocation(adsrc_prog_id_, "dt");
+    adsrc_mask_uniloc_ = glGetUniformLocation(adsrc_prog_id_, "mask");
+
+    advec_dt_uniloc_ = glGetUniformLocation(advec_prog_id_, "dt");
+    advec_shift_channel_uniloc_ = glGetUniformLocation(advec_prog_id_, "shift_channel");
+
+    diffu_a_uniloc_ = glGetUniformLocation(diffu_prog_id_, "a");
+    diffu_dt_uniloc_ = glGetUniformLocation(diffu_prog_id_, "dt");
+    diffu_shift_channel_uniloc_ = glGetUniformLocation(diffu_prog_id_, "shift_channel");
+    
+    proj0_shift_channel_uniloc_ = glGetUniformLocation(proj0_prog_id_, "shift_channel");
+    proj0_reset_channel_uniloc_ = glGetUniformLocation(proj0_prog_id_, "reset_channel");
+    
+    proj1_stable_channel_uniloc_ = glGetUniformLocation(proj1_prog_id_, "stable_channel");
+    proj1_shift_channel_uniloc_ = glGetUniformLocation(proj1_prog_id_, "shift_channel");
+    
+    proj2_shift_channel_mask_uniloc_ = glGetUniformLocation(proj 2_prog_id_, "shift_channel_mask");
+    proj2_source_channel_mask_uniloc_ = glGetUniformLocation(proj 2_prog_id_, "source_channel_mask");
+    
+    bound_mode_uniloc_ = glGetUniformLocation(bound_prog_id_, "mode");
+    bound_channel_uniloc_ = glGetUniformLocation(bound_prog_id_, "channel");
+    // texs
+    glGenTextures(3, &texs_);
+    for (int i = 0; i < 3; ++i) {
+        glBindTexture(GL_TEXTURE_3D, texs_[i]);
+        glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
 }
 
 void GasModel::update_tex3d(void) {
@@ -135,6 +178,7 @@ void GasModel::advect(int b, std::vector<float>& d, std::vector<float>& d0,
             float dt) {
     int i, j, k;
 
+
     #pragma omp parallel num_threads(NUM_THREADS)
     #pragma omp for collapse(3)
     for(i=1; i<=size.x-2; i++)
@@ -156,6 +200,9 @@ void GasModel::advect(int b, std::vector<float>& d, std::vector<float>& d0,
                              + s1 * ( t0 * (r0*d0[at(i1,j0,k0)] + r1*d0[at(i1,j0,k1)])
                                     + t1 * (r0*d0[at(i1,j1,k0)] + r1*d0[at(i1,j1,k1)]) );
             }
+    // glBindImageTexture to bind the load image
+    // glDispatchCompute(size[0], size[1], size[2])
+    // glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     set_bnd(b, d);
 }
 void GasModel::den_step(std::vector<float>& x, std::vector<float>& source, std::vector<float>& x0,
@@ -209,7 +256,7 @@ void GasModel::project(std::vector<float>& u, std::vector<float>& v, std::vector
         for(i=1; i<=size.x-2; i++)
             for(j=1; j<=size.y-2; j++)
                 for(k=1; k<=size.z-2; k++)
-                    p[at(i, j, k)] = (div[at(i, j, k)]
+                    p[at(i, j, k)] = (div[at(i, j, k)] // ???? using subtly different values?
                                     + p[at(i-1, j, k)] + p[at(i+1, j, k)]
                                     + p[at(i, j-1, k)] + p[at(i, j+1, k)]
                                     + p[at(i, j, k-1)] + p[at(i, j, k+1)]) / 6.0;

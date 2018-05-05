@@ -1,0 +1,56 @@
+R"zzz(#version 430 core
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(rgba32f, binding = 0) uniform image3D src_tex;
+layout(rgba32f, binding = 1) uniform image3D dst_tex;
+
+// streamed
+uniform float dt;
+uniform int shift_channel;
+
+void main() {
+    ivec3 loc = gl_GlobalInvocationID;
+    ivec3 size = gl_NumWorkGroups;
+    vec4 buf = imageLoad(src_tex, loc);
+    vec3 vbuf = vec3(buf);
+
+    vbuf = loc - dt * size * vbuf;
+    vbuf = clamp(vbuf, 0.5, size - 1.5);
+    buf = vec4(vbuf, buf[3]);
+
+    ivec3 l0 = ivec3(buf);
+    ivec3 l1 = l0 - 1;
+
+    vec3 str1 = vbuf - l0;
+    vec3 str0 = 1 - str1;
+
+    float x = buf[0]; // vel x?
+    float y = buf[1]; // vel y?
+    float z = buf[2]; // vel z?
+
+    int i1 = l1[0];
+    int i0 = l0[0];
+
+    int j1 = l1[1];
+    int j0 = l0[1];
+    
+    int k1 = l1[2];
+    int k0 = l0[2];
+
+    float s1 = rst1[0];
+    float s0 = rst0[0];
+    float t1 = rst1[1];
+    float t0 = rst0[1];
+    float r1 = rst1[2];
+    float r0 = rst0[2];
+
+    vec4 dst_data = imageLoad(dst_tex, loc);
+    // TODO change to image load and image save
+    dst_data[shift_channel] = s0 * ( t0 * (r0*den_src_tex[at(i0,j0,k0)] + r1*den_src_tex[at(i0,j0,k1)])
+                         + t1 * (r0*den_src_tex[at(i0,j1,k0)] + r1*den_src_tex[at(i0,j1,k1)]) )
+                  + s1 * ( t0 * (r0*den_src_tex[at(i1,j0,k0)] + r1*den_src_tex[at(i1,j0,k1)])
+                         + t1 * (r0*den_src_tex[at(i1,j1,k0)] + r1*den_src_tex[at(i1,j1,k1)]) );
+
+    imageStore(dst_tex, loc, dst_data);
+}
+)zzz"

@@ -44,6 +44,84 @@ private:
     float diff = 0.01;
     int bnd_type = 1;
 
+    // Then 4 separate buffers
+    GLuint vao_ = 0;
+    GLuint vbo_ = 0;
+
+    // program bindings
+    static constexpr shader_srcs_ = {
+        #include "adsrc.comp"
+        ,
+        #include "advec.comp"
+        ,
+        #include "bound.comp"
+        ,
+        #include "diffu.comp"
+        ,
+        #include "proj0.comp"
+        ,
+        #include "proj1.comp"
+        ,
+        #include "proj2.comp"
+    };
+    union {
+        GLuint shader_ids_[7];
+        struct {
+            GLuint adsrc_shader_id_;
+            GLuint advec_shader_id_;
+            GLuint bound_shader_id_;
+            GLuint diffu_shader_id_;
+            GLuint proj0_shader_id_;
+            GLuint proj1_shader_id_;
+            GLuint proj2_shader_id_;
+        };
+    };
+    union {
+        GLuint prog_ids_[7];
+        struct {
+            GLuint adsrc_prog_id_;
+            GLuint advec_prog_id_;
+            GLuint bound_prog_id_;
+            GLuint diffu_prog_id_;
+            GLuint proj0_prog_id_;
+            GLuint proj1_prog_id_;
+            GLuint proj2_prog_id_;
+        };
+    };
+    
+    // uniform location bindings
+    GLuint advec_dt_uniloc_;
+    GLuint advec_shift_channel_uniloc_;
+
+    GLuint diffu_a_uniloc_;
+    GLuint diffu_dt_uniloc_;
+    GLuint diffu_shift_channel_uniloc_;
+
+    GLuint adsrc_dt_uniloc_;
+    GLuint adsrc_mask_uniloc_;
+
+    GLuint proj0_shift_channel_uniloc_;
+    GLuint proj0_reset_channel_uniloc_;
+
+    GLuint proj1_stable_channel_uniloc_;
+    GLuint proj1_shift_channel_uniloc_;
+
+    GLuint proj2_shift_channel_mask_uniloc_;
+    GLuint proj2_source_channel_mask_uniloc_;
+
+    GLuint bound_mode_uniloc_;
+    GLuint bound_channel_uniloc_;
+
+    // dynamic texs, argb -> den, u, v, w
+    union {
+        GLuint texs_[6];
+        struct {
+            GLuint tex___;
+            GLuint tex_0_;
+            GLuint tex_s_;
+        };
+    };
+
 	void make_ellipse(void); // for debugging
 };
 

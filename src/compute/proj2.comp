@@ -1,0 +1,18 @@
+R"zzz(#version 430 core
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(rgba32f, binding = 0) uniform image3D stable_tex;
+layout(rgba32f, binding = 1) uniform image3D shift_tex;
+
+uniform ivec3 stable_channel_mask;
+uniform ivec3 shift_channel_mask;
+
+void main() {
+    ivec3 loc = gl_GlobalInvocationID;
+    ivec3 size = gl_NumWorkGroups;
+
+    u[at(i, j, k)] -= 0.5 * size.x * (stable_tex[at(i+1, j, k)] - stable_tex[at(i-1, j, k)]);
+    v[at(i, j, k)] -= 0.5 * size.y * (stable_tex[at(i, j+1, k)] - stable_tex[at(i, j-1, k)]);
+    w[at(i, j, k)] -= 0.5 * size.z * (stable_tex[at(i, j, k+1)] - stable_tex[at(i, j, k-1)]);
+}
+)zzz"

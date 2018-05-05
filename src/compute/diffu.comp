@@ -1,0 +1,28 @@
+R"zzz(#version 430 core
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(rgba32f, binding = 0) uniform image3D src_tex;
+layout(rgba32f, binding = 1) uniform image3D dst_tex;
+
+// streamed
+uniform float a;
+uniform float dt;
+uniform int shift_channel;
+
+void main() {
+    ivec3 loc = gl_GlobalInvocationID;
+    ivec3 size = gl_NumWorkGroups;
+
+    dst_tex[loc] = (
+        src_tex[loc] +
+        a * (
+              dst_tex[loc - ivec3(1, 0, 0)]
+            + dst_tex[loc + ivec3(1, 0, 0)]
+            + dst_tex[loc - ivec3(0, 1, 0)]
+            + dst_tex[loc + ivec3(0, 1, 0)]
+            + dst_tex[loc - ivec3(0, 0, 1)]
+            + dst_tex[loc + ivec3(0, 0, 1)]
+        )
+    ) / (1 + 6*a);
+}
+)zzz"
