@@ -10,59 +10,42 @@ class GasModel {
 public:
     GasModel(glm::ivec3 sz);
 
-    char* get_tex3d(void) { return tex3d.data(); }
+    char* get_tex3d(void) { return tex___; }
     glm::ivec3 get_size(void) const { return size; }
 	void simulate_step(float dt);
 
 private:
-
-    std::vector<char> tex3d; // W x H x L x 4
     glm::ivec3 size; // (W, H, L)
 
-	void update_tex3d(void);
-
     // simulation, from http://www.intpowertechcorp.com/GDC03.pdf
-	void add_source(std::vector<float>& x, std::vector<float>& s, float dt);
-	void diffuse(int b, std::vector<float>& x, std::vector<float>& x0, float diff, float dt);
-	void advect(int b, std::vector<float>& d, std::vector<float>& d0,
-            std::vector<float>& u, std::vector<float>& v, std::vector<float>& w,
-            float dt);
-	void den_step(std::vector<float>& x, std::vector<float>& den_s, std::vector<float>& x0,
-            std::vector<float>& u, std::vector<float>& v, std::vector<float>& w,
-            float diff, float dt);
-	void vel_step(std::vector<float>& u, std::vector<float>& u0, std::vector<float>& u_s,
-            std::vector<float>& v, std::vector<float>& v0, std::vector<float>& v_s,
-            std::vector<float>& w, std::vector<float>& w0, std::vector<float>& w_s,
-            float visc, float dt);
-	void project(std::vector<float>& u, std::vector<float>& v, std::vector<float>& w,
-            std::vector<float>& p, std::vector<float>& div);
-	void set_bnd(int b, std::vector<float>& x);
-    std::vector<float> vel_u, vel_v, vel_w, vel_u_0, vel_v_0, vel_w_0, vel_u_s, vel_v_s, vel_w_s;
-    std::vector<float> den, den_0, den_s;
-    std::vector<float> temp;
-    float visc = 1.0;
-    float diff = 0.01;
-    int bnd_type = 1;
+	void den_step(float dt);
+	void vel_step(float dt);
 
-    // Then 4 separate buffers
-    GLuint vao_ = 0;
-    GLuint vbo_ = 0;
+    void add_source(std::vector<float>& x, std::vector<float>& s, float dt);
+    void diffuse(const glm::ivec4& mask, const float& dt);
+    void advect(const glm::ivec4& mask, const float& dt);
+    void set_bnd(const glm::ivec4& mask, const float& dt);
+	void project(void);
+    
+    float visc_ = 1.0;
+    float diff_ = 0.01;
+    int bnd_type_ = 1;
 
     // program bindings
     static constexpr shader_srcs_ = {
-        #include "adsrc.comp"
+        #include "compute/adsrc.comp"
         ,
-        #include "advec.comp"
+        #include "compute/advec.comp"
         ,
-        #include "bound.comp"
+        #include "compute/bound.comp"
         ,
-        #include "diffu.comp"
+        #include "compute/diffu.comp"
         ,
-        #include "proj0.comp"
+        #include "compute/proj0.comp"
         ,
-        #include "proj1.comp"
+        #include "compute/proj1.comp"
         ,
-        #include "proj2.comp"
+        #include "compute/proj2.comp"
     };
     union {
         GLuint shader_ids_[7];
@@ -91,22 +74,22 @@ private:
     
     // uniform location bindings
     GLuint advec_dt_uniloc_;
-    GLuint advec_shift_channel_uniloc_;
+    GLuint advec_shift_mask_uniloc_;
 
     GLuint diffu_a_uniloc_;
     GLuint diffu_dt_uniloc_;
-    GLuint diffu_shift_channel_uniloc_;
+    GLuint diffu_shift_mask_uniloc_;
 
     GLuint adsrc_dt_uniloc_;
     GLuint adsrc_mask_uniloc_;
 
-    GLuint proj0_shift_channel_uniloc_;
+    GLuint proj0_shift_mask_uniloc_;
     GLuint proj0_reset_channel_uniloc_;
 
     GLuint proj1_stable_channel_uniloc_;
-    GLuint proj1_shift_channel_uniloc_;
+    GLuint proj1_shift_mask_uniloc_;
 
-    GLuint proj2_shift_channel_mask_uniloc_;
+    GLuint proj2_shift_mask_mask_uniloc_;
     GLuint proj2_source_channel_mask_uniloc_;
 
     GLuint bound_mode_uniloc_;
@@ -114,7 +97,7 @@ private:
 
     // dynamic texs, argb -> den, u, v, w
     union {
-        GLuint texs_[6];
+        GLuint texs_[3];
         struct {
             GLuint tex___;
             GLuint tex_0_;
