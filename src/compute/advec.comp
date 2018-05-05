@@ -6,7 +6,7 @@ layout(rgba32f, binding = 1) uniform image3D dst_tex;
 
 // streamed
 uniform float dt;
-uniform int shift_channel;
+uniform ivec4 mask;
 
 void main() {
     ivec3 loc = gl_GlobalInvocationID;
@@ -19,10 +19,10 @@ void main() {
     buf = vec4(vbuf, buf[3]);
 
     ivec3 l0 = ivec3(buf);
-    ivec3 l1 = l0 - 1;
+    ivec3 l1 = l0 + 1;
 
     vec3 str1 = vbuf - l0;
-    vec3 str0 = 1 - str1;
+    vec3 str0 = vec3(1) - str1;
 
     float x = buf[0]; // vel x?
     float y = buf[1]; // vel y?
@@ -37,19 +37,19 @@ void main() {
     int k1 = l1[2];
     int k0 = l0[2];
 
-    float s1 = rst1[0];
-    float s0 = rst0[0];
-    float t1 = rst1[1];
-    float t0 = rst0[1];
-    float r1 = rst1[2];
-    float r0 = rst0[2];
+    float s1 = str1[0];
+    float s0 = str0[0];
+    float t1 = str1[1];
+    float t0 = str0[1];
+    float r1 = str1[2];
+    float r0 = str0[2];
 
-    vec4 dst_data = imageLoad(dst_tex, loc);
-    // TODO change to image load and image save
-    dst_data[shift_channel] = s0 * ( t0 * (r0*den_src_tex[at(i0,j0,k0)] + r1*den_src_tex[at(i0,j0,k1)])
-                         + t1 * (r0*den_src_tex[at(i0,j1,k0)] + r1*den_src_tex[at(i0,j1,k1)]) )
-                  + s1 * ( t0 * (r0*den_src_tex[at(i1,j0,k0)] + r1*den_src_tex[at(i1,j0,k1)])
-                         + t1 * (r0*den_src_tex[at(i1,j1,k0)] + r1*den_src_tex[at(i1,j1,k1)]) );
+    vec4 dst_data = s0 * ( t0 * (r0*imageLoad(den_src_tex, ivec3(i0,j0,k0)) + r1*imageLoad(den_src_tex, ivec3(i0,j0,k1)))
+                         + t1 * (r0*imageLoad(den_src_tex, ivec3(i0,j1,k0)) + r1*imageLoad(den_src_tex, ivec3(i0,j1,k1))) )
+                  + s1 * ( t0 * (r0*imageLoad(den_src_tex, ivec3(i1,j0,k0)) + r1*imageLoad(den_src_tex, ivec3(i1,j0,k1)))
+                         + t1 * (r0*imageLoad(den_src_tex, ivec3(i1,j1,k0)) + r1*imageLoad(den_src_tex, ivec3(i1,j1,k1))) );
+    vec4 src_data = imageLoad(dst_tex, loc);
+    dst_data = src_data + mask * (dst_data - src_data);
 
     imageStore(dst_tex, loc, dst_data);
 }

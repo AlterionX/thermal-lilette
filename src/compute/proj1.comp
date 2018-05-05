@@ -1,20 +1,31 @@
 R"zzz(#version 430 core
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-layout(rgba32f, binding = 0) uniform image3D src_tex;
-layout(rgba32f, binding = 1) uniform image3D dst_tex;
+layout(rgba32f, binding = 1) uniform image3D tex;
 
-// streamed
-uniform int stable_channel;
-uniform int shift_channel;
+/********************************
+
+TODO: FLIP-FLOP THROUGH THE ITER
+
+********************************/
+
+uniform int ff; // 0 or 1
 
 void main() {
     ivec3 loc = gl_GlobalInvocationID;
     ivec3 size = gl_NumWorkGroups;
 
-    p[at(i, j, k)] = (div[at(i, j, k)] // ???? using subtly different values?
-                                    + p[at(i-1, j, k)] + p[at(i+1, j, k)]
-                                    + p[at(i, j-1, k)] + p[at(i, j+1, k)]
-                                    + p[at(i, j, k-1)] + p[at(i, j, k+1)]) / 6.0;
+    int i = loc[0];
+    int j = loc[1];
+    int k = loc[2];
+
+	vec4 new_divp = imageLoad(tex, loc);
+    new_divp[1 - ff] = (imageLoad(tex, ivec3(i, j, k))[2] // ???? using subtly different values?
+                	  + imageLoad(tex, ivec3(i-1, j, k))[ff] + imageLoad(tex, ivec3(i+1, j, k))[ff]
+                	  + imageLoad(tex, ivec3(i, j-1, k))[ff] + imageLoad(tex, ivec3(i, j+1, k))[ff]
+                	  + imageLoad(tex, ivec3(i, j, k-1))[ff] + imageLoad(tex, ivec3(i, j, k+1))[ff]) / 6.0;
+
+	imageStore(tex, loc, new_divp);
+	
 }
 )zzz"

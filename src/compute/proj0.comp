@@ -1,30 +1,26 @@
 R"zzz(#version 430 core
 layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
-layout(rgba32f, binding = 0) uniform image3D reset_tex;
-layout(rgba32f, binding = 1) uniform image3D shift_tex;
-layout(rgba32f, binding = 2) uniform image3D vel_tex;
-
-// streamed
-uniform int reset_channel;
-uniform int shift_channel;
+layout(rgba32f, binding = 0) uniform image3D divp_tex;
+layout(rgba32f, binding = 1) uniform image3D vel_tex;
 
 void main() {
     ivec3 loc = gl_GlobalInvocationID;
     ivec3 size = gl_NumWorkGroups;
 
-    shift_tex[loc][shift_channel] = -0.5 * (
+    float div = -0.5 * (
         (1.0/size.x) * (
-              vel_tex[loc + ivec3(1, 0, 0)][0]
-            - vel_tex[loc - ivec3(1, 0, 0)][0]
+              imageLoad(vel_tex, loc + ivec3(1, 0, 0))[0]
+            - imageLoad(vel_tex, loc - ivec3(1, 0, 0))[0]
         ) + (1.0/size.y) * (
-              vel_tex[loc + ivec3(0, 1, 0)][1]
-            - vel_tex[loc - ivec3(0, 1, 0)][1]
+              imageLoad(vel_tex, loc + ivec3(0, 1, 0))[1]
+            - imageLoad(vel_tex, loc - ivec3(0, 1, 0))[1]
         ) + (1.0/size.z) * (
-              vel_tex[loc + ivec3(0, 0, 1)][2]
-            - vel_tex[loc - ivec3(0, 0, 1)][2]
+              imageLoad(vel_tex, loc + ivec3(0, 0, 1))[2]
+            - imageLoad(vel_tex, loc - ivec3(0, 0, 1))[2]
         )
     );
-    reset_tex[loc][reset_channel] = 0.0;
+
+    imageStore(divp_tex, loc, vec4(0.0, 0.0, div, 0.0));
 }
 )zzz"
