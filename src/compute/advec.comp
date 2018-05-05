@@ -9,8 +9,9 @@ uniform float dt;
 uniform ivec4 mask;
 
 void main() {
-    ivec3 loc = gl_GlobalInvocationID;
-    ivec3 size = gl_NumWorkGroups;
+    ivec3 loc = ivec3(gl_GlobalInvocationID);
+    ivec3 size = ivec3(gl_NumWorkGroups);
+    
     vec4 buf = imageLoad(src_tex, loc);
     vec3 vbuf = vec3(buf);
 

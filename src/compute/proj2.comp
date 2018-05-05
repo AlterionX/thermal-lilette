@@ -4,18 +4,20 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image3D divp_tex;
 layout(rgba32f, binding = 1) uniform image3D dst_tex;
 
+uniform int ff; // 0 or 1
+
 void main() {
-    ivec3 loc = gl_GlobalInvocationID;
-    ivec3 size = gl_NumWorkGroups;
+    ivec3 loc = ivec3(gl_GlobalInvocationID);
+    ivec3 size = ivec3(gl_NumWorkGroups);
 
     int i = loc[0];
     int j = loc[1];
     int k = loc[2];
 
     vec4 dst_data = imageLoad(dst_tex, loc);
-    dst_data[0] -= 0.5 * size.x * (imageLoad(divp_tex, ivec3(i+1, j, k)) - imageLoad(divp_tex, ivec3(i-1, j, k)));
-    dst_data[1] -= 0.5 * size.y * (imageLoad(divp_tex, ivec3(i, j+1, k)) - imageLoad(divp_tex, ivec3(i, j-1, k)));
-    dst_data[2] -= 0.5 * size.z * (imageLoad(divp_tex, ivec3(i, j, k+1)) - imageLoad(divp_tex, ivec3(i, j, k-1)));
+    dst_data[0] -= 0.5 * size.x * (imageLoad(divp_tex, ivec3(i+1, j, k))[ff] - imageLoad(divp_tex, ivec3(i-1, j, k))[ff]);
+    dst_data[1] -= 0.5 * size.y * (imageLoad(divp_tex, ivec3(i, j+1, k))[ff] - imageLoad(divp_tex, ivec3(i, j-1, k))[ff]);
+    dst_data[2] -= 0.5 * size.z * (imageLoad(divp_tex, ivec3(i, j, k+1))[ff] - imageLoad(divp_tex, ivec3(i, j, k-1))[ff]);
 
     imageStore(dst_tex, loc, dst_data);
 }

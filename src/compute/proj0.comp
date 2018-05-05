@@ -5,8 +5,8 @@ layout(rgba32f, binding = 0) uniform image3D divp_tex;
 layout(rgba32f, binding = 1) uniform image3D vel_tex;
 
 void main() {
-    ivec3 loc = gl_GlobalInvocationID;
-    ivec3 size = gl_NumWorkGroups;
+    ivec3 loc = ivec3(gl_GlobalInvocationID);
+    ivec3 size = ivec3(gl_NumWorkGroups);
 
     float div = -0.5 * (
         (1.0/size.x) * (

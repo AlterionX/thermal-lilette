@@ -70,7 +70,7 @@ const char* volume_frag_shader =
 #include "shaders/volume.frag"
 ;
 
-void initBindTex3D(GLuint& tex_id, char* tex3d, glm::ivec3 size) {
+void initBindTex3D(GLuint& tex_id, GLuint tex3d, glm::ivec3 size) {
     gdm::qd([&] GDM_OP {
         CHECK_GL_ERROR(glGenTextures(1, &tex_id));
         CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, tex_id));
@@ -81,20 +81,14 @@ void initBindTex3D(GLuint& tex_id, char* tex3d, glm::ivec3 size) {
         CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
         CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
 
-        CHECK_GL_ERROR(glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, 
-                            size.x, size.y , size.z, 0,
-                            GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)tex3d));
         CHECK_GL_ERROR(glBindTexture( GL_TEXTURE_3D, 0));
 
         std::cout << "register tex3d at " << tex_id << std::endl;
     });
 }
 
-void updateTex3D(GLuint& tex_id, char* tex3d, glm::ivec3 size) {   
+void updateTex3D(GLuint& tex_id, GLuint tex3d, glm::ivec3 size) {
     CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, tex_id));
-    CHECK_GL_ERROR(glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0,
-                        size.x, size.y, size.z, 
-                        GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)tex3d));
     CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, 0));
 }
 
@@ -117,7 +111,7 @@ int main(int argc, char* argv[]) {
 
     // Gas Model
     auto gas_model = GasModel(glm::ivec3(32, 32, 32));
-    char* gas_raw_tex = gas_model.get_tex3d();
+    GLuint gas_raw_tex = gas_model.get_tex3d();
     float focus_layer = 0.0f;
     GLuint gas_tex_id;
     initBindTex3D(gas_tex_id, gas_raw_tex, gas_model.get_size());

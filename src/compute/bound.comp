@@ -4,13 +4,12 @@ layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 layout(rgba32f, binding = 0) uniform image3D bounding_tex;
 
 // streamed
-uniform int sup_mode;
 uniform int mode;
 uniform ivec4 mask;
 
 void main() {
-    ivec3 loc = gl_GlobalInvocationID;
-    ivec3 size = gl_NumWorkGroups;
+    ivec3 loc = ivec3(gl_GlobalInvocationID);
+    ivec3 size = ivec3(gl_NumWorkGroups);
 
     vec4 b_data = imageLoad(bounding_tex, loc);
 
@@ -29,19 +28,19 @@ void main() {
         if (loc.x == 0 || loc.x == size.x - 1) {
             ivec3 subloc = loc;
             subloc.x += int(loc.x == 0) * 2 - 1;
-            b_data_2[0] *= -(int(mode[0] == 1) * 2 - 1); // TODO check if this actually helps
+            b_data_2[0] *= -(int(mask[0] == 1) * 2 - 1); // TODO check if this actually helps
             b_data += imageLoad(bounding_tex, subloc); cnt++;
         }
         if (loc.y == 0 || loc.y == size.y - 1) {
             ivec3 subloc = loc;
             subloc.y += int(loc.y == 0) * 2 - 1;
-            b_data_2[1] *= -(int(mode[1] == 1) * 2 - 1); // TODO check if this actually helps
+            b_data_2[1] *= -(int(mask[1] == 1) * 2 - 1); // TODO check if this actually helps
             b_data += imageLoad(bounding_tex, subloc); cnt++;
         }
         if (loc.z == 0 || loc.z == size.z - 1) {
             ivec3 subloc = loc;
             subloc.z += int(loc.z == 0) * 2 - 1;
-            b_data_2[2] *= -(int(mode[2] == 1) * 2 - 1); // TODO check if this actually helps
+            b_data_2[2] *= -(int(mask[2] == 1) * 2 - 1); // TODO check if this actually helps
             b_data += imageLoad(bounding_tex, subloc); cnt++;
         }
 
@@ -50,6 +49,9 @@ void main() {
         else if(cnt > 1)
             b_data /= cnt;
     }
+
+    vec4 src_data = imageLoad(bounding_tex, loc);
+    b_data = src_data + mask * (b_data - src_data);
     
     imageStore(bounding_tex, loc, b_data);
 }
