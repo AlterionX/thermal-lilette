@@ -11,7 +11,7 @@ out vec4 vs_normal;
 out vec2 vs_uv;
 out vec4 vs_camera_direction;
 void main() {
-	float scale = 10.0;
+	float scale = 50.0;
 	gl_Position = vec4(scale * (vertex_position.x), 
 					   scale * (vertex_position.y + tex3d_layer + 1.0), 
 					   scale * (vertex_position.z), 1.0);

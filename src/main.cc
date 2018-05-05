@@ -245,14 +245,14 @@ int main(int argc, char* argv[]) {
             glfwGetFramebufferSize(window, &window_width, &window_height);
             glViewport(0, 0, window_width, window_height);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            glEnable(GL_DEPTH_TEST);
+            // glEnable(GL_DEPTH_TEST);
             glEnable(GL_MULTISAMPLE);
             glEnable(GL_BLEND);
-            glEnable(GL_CULL_FACE);
+            // glEnable(GL_CULL_FACE);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             glDepthFunc(GL_LESS);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glCullFace(GL_BACK);
+            // glCullFace(GL_BACK);
 
             if (psys.is_active()) {
                 CHECK_GL_ERROR(glBindBuffer(GL_UNIFORM_BUFFER, psys_model_ubo));
@@ -285,22 +285,23 @@ int main(int argc, char* argv[]) {
             }
 
             // render 3d tex, face up
-            if(gui_lite.gas_dt > 1e-6) {
-                gas_model.simulate_step(gui_lite.gas_dt);
-                // gui_lite.gas_dt = 0.0;
-            }
-            gas_raw_tex = gas_model.get_tex3d();
-            updateTex3D(gas_tex_id, gas_raw_tex, gas_model.get_size());
-            for(focus_layer=-1.0f; focus_layer<=1.0f; focus_layer+=0.005f) {
-                // std::cout << "render 3d texture: " << focus_layer << std::endl;
-                volume_pass.setup();
-                CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, gas_tex_id));
-                CHECK_GL_ERROR(glDrawElements(
-                        GL_TRIANGLES,
-                        gas_cube_meshi.m()->g_faces().size() * 3,
-                        GL_UNSIGNED_INT, 0
-                ));
-                CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, 0));
+            if(gui_lite.show_gas) {
+                if(gui_lite.gas_dt > 0) {
+                    gas_model.simulate_step(gui_lite.gas_dt);
+                }
+                gas_raw_tex = gas_model.get_tex3d();
+                updateTex3D(gas_tex_id, gas_raw_tex, gas_model.get_size());
+                for(focus_layer=-1.0f; focus_layer<=1.0f; focus_layer+=0.005f) {
+                    // std::cout << "render 3d texture: " << focus_layer << std::endl;
+                    volume_pass.setup();
+                    CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, gas_tex_id));
+                    CHECK_GL_ERROR(glDrawElements(
+                            GL_TRIANGLES,
+                            gas_cube_meshi.m()->g_faces().size() * 3,
+                            GL_UNSIGNED_INT, 0
+                    ));
+                    CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, 0));
+                }
             }
 
 

@@ -41,7 +41,8 @@ private:
     std::vector<float> den, den_0, den_s;
     std::vector<float> temp;
     float visc = 1.0;
-    float diff = 2.0;
+    float diff = 0.01;
+    int bnd_type = 1;
 
 	void make_ellipse(void); // for debugging
 };

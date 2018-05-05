@@ -138,6 +138,7 @@ public:
     float time_speed_ = 1.0;
     float cloud_freq_ = 500.0;
     float gas_dt = 0.0;
+    bool  show_gas = false;
 };
 
 

@@ -538,11 +538,41 @@ void GUILite::register_cbs(void) {
         [&] TD_LAMBDA { cam.trans(glm::vec3(0.0f, float(-dt.count() / move_frac), 0.0f)); }
     );
 
+    // enable gas model
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k('.', GLFW_MOD_CONTROL) , iom::MODE::RELEASE},
+        [&] TI_LAMBDA {
+            show_gas = !show_gas;
+        }
+    );
+    // stop gas model
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k('/') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA {
+            gas_dt = -1.0;
+            std::cout << "set gas_dt= " << gas_dt << std::endl;
+        }
+    );
+
+    static float dt_rate=0.000001;   
     // forward gas model
     ioman.rcb_i(
         iom::IOReq {iom::kb_k('.') , iom::MODE::RELEASE},
         [&] TI_LAMBDA {
-            gas_dt = 0.0001;
+            gas_dt += dt_rate;
+            if(gas_dt < 0)
+                gas_dt = -dt_rate;
+            std::cout << "set gas_dt= " << gas_dt << std::endl;
+        }
+    );
+    // slow down gas model
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k(',') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA {
+            gas_dt -= dt_rate;
+            if(gas_dt < 0)
+                gas_dt = 0.0;
+            std::cout << "set gas_dt= " << gas_dt << std::endl;
         }
     );
     // camera
