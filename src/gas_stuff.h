@@ -12,7 +12,7 @@ public:
 
     char* get_tex3d(void) { return tex3d.data(); }
     glm::ivec3 get_size(void) const { return size; }
-	void simulate_step(float dt);
+	void simulate_step(float dt, bool nocol);
 
     void shift_diff(float diff_shift);
     void shift_visc(float visc_shift);
@@ -24,7 +24,7 @@ private:
     std::vector<char> tex3d; // W x H x L x 4
     glm::ivec3 size; // (W, H, L)
 
-	void update_tex3d(void);
+	void update_tex3d(bool nocol);
 
     // simulation, from http://www.intpowertechcorp.com/GDC03.pdf
 	void add_source(std::vector<float>& x, std::vector<float>& s, float dt);

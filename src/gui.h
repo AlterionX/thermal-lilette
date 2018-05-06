@@ -143,6 +143,8 @@ public:
     int visc_del = 0;
     int diff_del = 0;
     int blast_dir = 0;
+
+    bool nocol = false;
 };
 
 

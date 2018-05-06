@@ -614,6 +614,12 @@ void GUILite::register_cbs(void) {
         [&] TI_LAMBDA { ++diff_del; }
     );
 
+    //colors
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k('c') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA { nocol = !nocol; std::cout << "toggle color" << std::endl; }
+    );
+
     // camera
     static auto lmb = iom::mb_k(GLFW_MOUSE_BUTTON_LEFT, 0);
     static auto to_vec2 = [](const iom::IOState& ios_p) {

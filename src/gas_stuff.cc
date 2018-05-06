@@ -72,21 +72,20 @@ GasModel::GasModel(glm::ivec3 sz) : size(sz), tex3d(sz.x*sz.y*sz.z*4, 0),
     //     }
 }
 
-void GasModel::update_tex3d(void) {
+void GasModel::update_tex3d(bool nocol) {
     for(int x=0; x<size.x; x++)
         for(int y=0; y<size.y; y++)
             for(int z=0; z<size.z; z++) {
-                // if(vel_v[at(x, y, z)] > 0.001)
-                //     std::cout << vel_u[at(x, y, z)] << " " 
-                //                 << vel_v[at(x, y, z)] << " " 
-                //                 << vel_w[at(x, y, z)] << std::endl;
-                tex3d[pat(x, y, z)+0] = (int)(127.0 * glm::clamp(vel_u[at(x, y, z)]*2.0f, -1.0f, 1.0f)) + 127;
-                tex3d[pat(x, y, z)+1] = (int)(127.0 * glm::clamp(vel_v[at(x, y, z)]*2.0f, -1.0f, 1.0f)) + 127;
-                tex3d[pat(x, y, z)+2] = (int)(127.0 * glm::clamp(vel_w[at(x, y, z)]*2.0f, -1.0f, 1.0f)) + 127;
-                // if(y <= 1 || den[at(x, y, z)] > 0.001)
-                //     std::cout << x << ", " << y <<  ", " << z << ": " << den[at(x, y, z)] << std::endl;
                 tex3d[pat(x, y, z)+3] = (int)(255 * glm::clamp(den[at(x, y, z)]*10000.0f, 0.0f, 1.0f));
-                // tex3d[pat(x, y, z)+3] = 10;
+                if (!nocol) {
+                    tex3d[pat(x, y, z)+0] = (int)(127.0 * glm::clamp(vel_u[at(x, y, z)]*2.0f, -1.0f, 1.0f)) + 127;
+                    tex3d[pat(x, y, z)+1] = (int)(127.0 * glm::clamp(vel_v[at(x, y, z)]*2.0f, -1.0f, 1.0f)) + 127;
+                    tex3d[pat(x, y, z)+2] = (int)(127.0 * glm::clamp(vel_w[at(x, y, z)]*2.0f, -1.0f, 1.0f)) + 127;
+                } else {
+                    tex3d[pat(x, y, z)+0] = tex3d[pat(x, y, z)+3];
+                    tex3d[pat(x, y, z)+1] = tex3d[pat(x, y, z)+3];
+                    tex3d[pat(x, y, z)+2] = tex3d[pat(x, y, z)+3];
+                }
            }
 }
 
@@ -179,7 +178,7 @@ void GasModel::retract_burst(void) {
 /********************************************************/
 /** Navier-Stokes (v-rho) Gas Model Solver **************/
 
-void GasModel::simulate_step(float dt) {
+void GasModel::simulate_step(float dt, bool nocol) {
     if (burst_timer > 0) {
         if (!--burst_timer) retract_burst();
     }
@@ -189,7 +188,7 @@ void GasModel::simulate_step(float dt) {
     // std::cout << "den_step..." << std::endl;
     den_step(den, den_s, den_0, vel_u, vel_v, vel_w, diff, dt);
     // std::cout << "update_tex3d..." << std::endl;
-    update_tex3d();
+    update_tex3d(nocol);
 }
 void GasModel::add_source(std::vector<float>& x, std::vector<float>& s, float dt) {
     int i;

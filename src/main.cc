@@ -287,12 +287,12 @@ int main(int argc, char* argv[]) {
             // render 3d tex, face up
             if(gui_lite.show_gas) {
                 if (gui_lite.diff_del != 0) {
-                    float diff_del_const = 0.1;
+                    float diff_del_const = 0.25;
                     gas_model.shift_diff(gui_lite.diff_del * diff_del_const);
                     gui_lite.diff_del = 0;
                 }
                 if (gui_lite.visc_del != 0) {
-                    float visc_del_const = 0.1;
+                    float visc_del_const = 0.25;
                     gas_model.shift_visc(gui_lite.visc_del * visc_del_const);
                     gui_lite.visc_del = 0;
                 }
@@ -302,7 +302,7 @@ int main(int argc, char* argv[]) {
                 }
 
                 if(gui_lite.gas_dt > 0) {
-                    gas_model.simulate_step(gui_lite.gas_dt);
+                    gas_model.simulate_step(gui_lite.gas_dt, gui_lite.nocol);
                 }
 
                 gas_raw_tex = gas_model.get_tex3d();
