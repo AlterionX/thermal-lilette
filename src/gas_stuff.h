@@ -14,6 +14,11 @@ public:
     glm::ivec3 get_size(void) const { return size; }
 	void simulate_step(float dt);
 
+    void shift_diff(float diff_shift);
+    void shift_visc(float visc_shift);
+    void apply_burst(int preset);
+    void retract_burst(void);
+
 private:
 
     std::vector<char> tex3d; // W x H x L x 4
@@ -43,6 +48,9 @@ private:
     float visc = 1.0;
     float diff = 0.01;
     int bnd_type = 1;
+
+    int curr_burst = 0;
+    int burst_timer = 20;
 
 	void make_ellipse(void); // for debugging
 };

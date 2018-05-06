@@ -286,9 +286,25 @@ int main(int argc, char* argv[]) {
 
             // render 3d tex, face up
             if(gui_lite.show_gas) {
+                if (gui_lite.diff_del != 0) {
+                    float diff_del_const = 0.1;
+                    gas_model.shift_diff(gui_lite.diff_del * diff_del_const);
+                    gui_lite.diff_del = 0;
+                }
+                if (gui_lite.visc_del != 0) {
+                    float visc_del_const = 0.1;
+                    gas_model.shift_visc(gui_lite.visc_del * visc_del_const);
+                    gui_lite.visc_del = 0;
+                }
+                if (gui_lite.blast_dir != 0) {
+                    gas_model.apply_burst(gui_lite.blast_dir);
+                    gui_lite.blast_dir = 0;
+                }
+
                 if(gui_lite.gas_dt > 0) {
                     gas_model.simulate_step(gui_lite.gas_dt);
                 }
+
                 gas_raw_tex = gas_model.get_tex3d();
                 updateTex3D(gas_tex_id, gas_raw_tex, gas_model.get_size());
                 for(focus_layer=-1.0f; focus_layer<=1.0f; focus_layer+=0.005f) {

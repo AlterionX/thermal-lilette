@@ -1,0 +1,23 @@
+R"zzz(#version 430 core
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+
+layout(rgba32f, binding = 0) uniform image3D src_tex;
+layout(rgba32f, binding = 0) uniform image3D norm_tex;
+
+void main() {
+    ivec3 loc = ivec3(gl_GlobalInvocationID);
+    ivec3 size = ivec3(gl_NumWorkGroups);
+
+    vec4 val = loadImage(src_tex, loc);
+
+    ivec4 charred = (
+        vec4(vec3(127.0), 255)
+        * clamp(
+            val * vec4(vec3(2), 10000),
+            vec4(vec3(-1), 1),
+            vec4(1)
+        ) + 127
+    );
+    
+    imageStore(bounding_tex, loc, charred);
+})zzz"

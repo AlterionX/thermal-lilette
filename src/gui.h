@@ -139,6 +139,10 @@ public:
     float cloud_freq_ = 500.0;
     float gas_dt = 0.0;
     bool  show_gas = false;
+
+    int visc_del = 0;
+    int diff_del = 0;
+    int blast_dir = 0;
 };
 
 

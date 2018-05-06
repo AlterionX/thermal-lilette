@@ -538,14 +538,14 @@ void GUILite::register_cbs(void) {
         [&] TD_LAMBDA { cam.trans(glm::vec3(0.0f, float(-dt.count() / move_frac), 0.0f)); }
     );
 
-    // enable gas model
+    // sim speed
+    static float dt_rate=0.000001;
     ioman.rcb_i(
         iom::IOReq {iom::kb_k('.', GLFW_MOD_CONTROL) , iom::MODE::RELEASE},
         [&] TI_LAMBDA {
             show_gas = !show_gas;
         }
     );
-    // stop gas model
     ioman.rcb_i(
         iom::IOReq {iom::kb_k('/') , iom::MODE::RELEASE},
         [&] TI_LAMBDA {
@@ -553,9 +553,6 @@ void GUILite::register_cbs(void) {
             std::cout << "set gas_dt= " << gas_dt << std::endl;
         }
     );
-
-    static float dt_rate=0.000001;   
-    // forward gas model
     ioman.rcb_i(
         iom::IOReq {iom::kb_k('.') , iom::MODE::RELEASE},
         [&] TI_LAMBDA {
@@ -565,7 +562,6 @@ void GUILite::register_cbs(void) {
             std::cout << "set gas_dt= " << gas_dt << std::endl;
         }
     );
-    // slow down gas model
     ioman.rcb_i(
         iom::IOReq {iom::kb_k(',') , iom::MODE::RELEASE},
         [&] TI_LAMBDA {
@@ -575,6 +571,49 @@ void GUILite::register_cbs(void) {
             std::cout << "set gas_dt= " << gas_dt << std::endl;
         }
     );
+
+    // viscosity
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k(';') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA { --visc_del; }
+    );
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k('\'') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA { ++visc_del; }
+    );
+
+    // packages
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k('1') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA { blast_dir = 1; }
+    );
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k('2') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA { blast_dir = 2; }
+    );
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k('3') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA { blast_dir = 3; }
+    );
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k('4') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA { blast_dir = 4; }
+    );
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k('5') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA { blast_dir = 5; }
+    );
+
+    // diffusion constant
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k('[') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA { --diff_del; }
+    );
+    ioman.rcb_i(
+        iom::IOReq {iom::kb_k(']') , iom::MODE::RELEASE},
+        [&] TI_LAMBDA { ++diff_del; }
+    );
+
     // camera
     static auto lmb = iom::mb_k(GLFW_MOUSE_BUTTON_LEFT, 0);
     static auto to_vec2 = [](const iom::IOState& ios_p) {

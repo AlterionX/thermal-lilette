@@ -90,14 +90,103 @@ void GasModel::update_tex3d(void) {
            }
 }
 
+void GasModel::shift_diff(float diff_shift) {
+    diff = glm::clamp(diff + diff_shift, 0.01f, 100.0f);
+}
+void GasModel::shift_visc(float visc_shift) {
+    visc = glm::clamp(visc + visc_shift, 0.01f, 100.0f);
+}
+void GasModel::apply_burst(int preset) {
+    burst_timer = 15;
+    // Add burst data
+    switch (preset) {
+    case 1: { // upwards
+        for(int x=size.x*11/24; x<size.x*13/24; x++)
+            for(int z=size.z*11/24; z<size.z*13/24; z++) {
+                den_s[at(x, 1, z)] = 1.0;
+
+                for(int y=1; y<size.y-2; y++) {
+                    vel_u_s[at(x, y, z)] = 1e6 * (x - size.x/2);
+                    vel_v_s[at(x, y, z)] = 1e8;
+                    vel_w_s[at(x, y, z)] = 1e6 * (z - size.z/2);
+                }
+            }
+        break;
+    } case 2: { // to the right
+        for(int y=size.y*11/24; y<size.y*13/24; y++)
+            for(int z=size.z*11/24; z<size.z*13/24; z++) {
+                den_s[at(1, y, z)] = 1.0;
+
+                for(int x=1; x<size.x-2; x++) {
+                    vel_u_s[at(x, y, z)] = -1e8;
+                    vel_v_s[at(x, y, z)] = 1e6 * (y - size.y/2);
+                    vel_w_s[at(x, y, z)] = 1e6 * (z - size.z/2);
+                }
+            }
+        break;
+    } case 3: { // to the left
+        for(int y=size.y*11/24; y<size.y*13/24; y++)
+            for(int z=size.z*11/24; z<size.z*13/24; z++) {
+                den_s[at(size.x - 1, y, z)] = 1.0;
+
+                for(int x=1; x<size.x-2; x++) {
+                    vel_u_s[at(x, y, z)] = 1e8;
+                    vel_v_s[at(x, y, z)] = 1e6 * (y - size.y/2);
+                    vel_w_s[at(x, y, z)] = 1e6 * (z - size.z/2);
+                }
+            }
+        break;
+    } case 4: { // downwards
+        for(int x=size.x*11/24; x<size.x*13/24; x++)
+            for(int z=size.z*11/24; z<size.z*13/24; z++) {
+                den_s[at(x, size.y-1, z)] = 1.0;
+
+                for(int y=1; y<size.y-2; y++) {
+                    vel_u_s[at(x, y, z)] = 1e6 * (x - size.x/2);
+                    vel_v_s[at(x, y, z)] = -1e8;
+                    vel_w_s[at(x, y, z)] = 1e6 * (z - size.z/2);
+                }
+            }
+        break;
+    } case 5: { // out from center
+        for (int x = size.x/2 - 1; x < size.x/2 + 1; ++x)
+            for (int y = size.y/2 - 1; y < size.y/2 + 1; ++y)
+                for (int z = size.z/2 - 1; z < size.z/2 + 1; ++z) {
+                    den_s[at(x, y, z)] = glm::abs(64.0f / (x - size.x/2) / (y - size.y/2) / (z - size.z/2)) / 500000;
+                }
+        glm::vec3 center = glm::vec3(size) / 2.0f;
+        for(int x = 0; x < size.x; x++)
+            for(int z = 0; z < size.z; z++)
+                for(int y=1; y < size.y; y++) {
+                    glm::vec3 vel = glm::normalize(glm::vec3(x, y, z) - center);
+                    vel_u_s[at(x, y, z)] = vel[0];
+                    vel_v_s[at(x, y, z)] = vel[1];
+                    vel_w_s[at(x, y, z)] = vel[2];
+                }
+        break;
+    }
+    }
+    
+}
+void GasModel::retract_burst(void) {
+    int burster = curr_burst;
+    curr_burst = 0;
+    // Remove burst data
+    for(int i=0; i<size.x*size.y*size.z; i++) {
+        den_s[i] = 0;
+        vel_u_s[i] = 0;
+        vel_v_s[i] = 0;
+        vel_w_s[i] = 0;
+    }
+}
+
 /********************************************************/
 /** Navier-Stokes (v-rho) Gas Model Solver **************/
 
 void GasModel::simulate_step(float dt) {
-    static int cnt = 20;
-    if(cnt-- < 0)
-        for(int i=0; i<size.x*size.y*size.z; i++)
-            den_s[i] = 0;
+    if (burst_timer > 0) {
+        if (!--burst_timer) retract_burst();
+    }
 
     // std::cout << "vel_step..." << std::endl;
     vel_step(vel_u, vel_u_0, vel_u_s, vel_v, vel_v_0, vel_v_s, vel_w, vel_w_0, vel_w_s, visc, dt);
