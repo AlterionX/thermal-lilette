@@ -127,7 +127,7 @@ void GasModel::apply_burst(int preset) {
     } case 3: { // to the left
         for(int y=size.y*11/24; y<size.y*13/24; y++)
             for(int z=size.z*11/24; z<size.z*13/24; z++) {
-                den_s[at(size.x - 1, y, z)] = 1.0;
+                den_s[at(size.x - 2, y, z)] = 1.0;
 
                 for(int x=1; x<size.x-2; x++) {
                     vel_u_s[at(x, y, z)] = 1e8;
@@ -139,7 +139,7 @@ void GasModel::apply_burst(int preset) {
     } case 4: { // downwards
         for(int x=size.x*11/24; x<size.x*13/24; x++)
             for(int z=size.z*11/24; z<size.z*13/24; z++) {
-                den_s[at(x, size.y-1, z)] = 1.0;
+                den_s[at(x, size.y-2, z)] = 1.0;
 
                 for(int y=1; y<size.y-2; y++) {
                     vel_u_s[at(x, y, z)] = 1e6 * (x - size.x/2);
@@ -149,16 +149,12 @@ void GasModel::apply_burst(int preset) {
             }
         break;
     } case 5: { // out from center
-        for (int x = size.x/2 - 1; x < size.x/2 + 1; ++x)
-            for (int y = size.y/2 - 1; y < size.y/2 + 1; ++y)
-                for (int z = size.z/2 - 1; z < size.z/2 + 1; ++z) {
-                    den_s[at(x, y, z)] = glm::abs(64.0f / (x - size.x/2) / (y - size.y/2) / (z - size.z/2)) / 500000;
-                }
-        glm::vec3 center = glm::vec3(size) / 2.0f;
+        glm::ivec3 center = size / 2;
+        den_s[at(center.x, center.y, center.z)] = 5;
         for(int x = 0; x < size.x; x++)
             for(int z = 0; z < size.z; z++)
                 for(int y=1; y < size.y; y++) {
-                    glm::vec3 vel = glm::normalize(glm::vec3(x, y, z) - center);
+                    glm::vec3 vel = (glm::vec3(x, y, z) - glm::vec3(center)) / 5.0f;
                     vel_u_s[at(x, y, z)] = vel[0];
                     vel_v_s[at(x, y, z)] = vel[1];
                     vel_w_s[at(x, y, z)] = vel[2];
@@ -173,10 +169,10 @@ void GasModel::retract_burst(void) {
     curr_burst = 0;
     // Remove burst data
     for(int i=0; i<size.x*size.y*size.z; i++) {
-        den_s[i] = 0;
-        vel_u_s[i] = 0;
-        vel_v_s[i] = 0;
-        vel_w_s[i] = 0;
+        // den_s[i] = 0;
+        // vel_u_s[i] = 0;
+        // vel_v_s[i] = 0;
+        // vel_w_s[i] = 0;
     }
 }
 
@@ -425,7 +421,7 @@ void GasModel::make_ellipse(void) {
                 tex3d[pat(x, y, z)+1] = 255;
                 tex3d[pat(x, y, z)+2] = 255;
                 glm::vec3 delta = glm::vec3((float)x, (float)y, z/2.0f) - center;
-                std::cout << glm::to_string(delta) << ", length= " << glm::length(delta) << std::endl;
+                // std::cout << glm::to_string(delta) << ", length= " << glm::length(delta) << std::endl;
                 if(glm::length(delta) < size.x/4.0) {
                     tex3d[pat(x, y, z)+3] = 255;
                 }
