@@ -10,8 +10,8 @@ uniform float dt;
 uniform ivec4 mask;
 
 void main() {
-    ivec3 loc = gl_GlobalInvocationID;
-    ivec3 size = gl_NumWorkGroups;
+    ivec3 loc = ivec3(gl_GlobalInvocationID);
+    ivec3 size = ivec3(gl_NumWorkGroups);
 
     vec4 dst_data = imageLoad(src_tex, loc) +
         a * (
@@ -22,7 +22,7 @@ void main() {
             + imageLoad(dst_tex, loc - ivec3(0, 0, 1))
             + imageLoad(dst_tex, loc + ivec3(0, 0, 1))
         )
-    ) / (1 + 6*a);
+    / (1 + 6*a);
     vec4 src_data = imageLoad(src_tex, loc);
     dst_data = src_data + mask * (dst_data - src_data);
 

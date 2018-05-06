@@ -16,7 +16,7 @@ void main() {
     vec3 vbuf = vec3(buf);
 
     vbuf = loc - dt * size * vbuf;
-    vbuf = clamp(vbuf, 0.5, size - 1.5);
+    vbuf = clamp(vbuf, vec3(0.5), size - 1.5);
     buf = vec4(vbuf, buf[3]);
 
     ivec3 l0 = ivec3(buf);
@@ -45,10 +45,10 @@ void main() {
     float r1 = str1[2];
     float r0 = str0[2];
 
-    vec4 dst_data = s0 * ( t0 * (r0*imageLoad(den_src_tex, ivec3(i0,j0,k0)) + r1*imageLoad(den_src_tex, ivec3(i0,j0,k1)))
-                         + t1 * (r0*imageLoad(den_src_tex, ivec3(i0,j1,k0)) + r1*imageLoad(den_src_tex, ivec3(i0,j1,k1))) )
-                  + s1 * ( t0 * (r0*imageLoad(den_src_tex, ivec3(i1,j0,k0)) + r1*imageLoad(den_src_tex, ivec3(i1,j0,k1)))
-                         + t1 * (r0*imageLoad(den_src_tex, ivec3(i1,j1,k0)) + r1*imageLoad(den_src_tex, ivec3(i1,j1,k1))) );
+    vec4 dst_data = s0 * ( t0 * (r0*imageLoad(src_tex, ivec3(i0,j0,k0)) + r1*imageLoad(src_tex, ivec3(i0,j0,k1)))
+                         + t1 * (r0*imageLoad(src_tex, ivec3(i0,j1,k0)) + r1*imageLoad(src_tex, ivec3(i0,j1,k1))) )
+                  + s1 * ( t0 * (r0*imageLoad(src_tex, ivec3(i1,j0,k0)) + r1*imageLoad(src_tex, ivec3(i1,j0,k1)))
+                         + t1 * (r0*imageLoad(src_tex, ivec3(i1,j1,k0)) + r1*imageLoad(src_tex, ivec3(i1,j1,k1))) );
     vec4 src_data = imageLoad(dst_tex, loc);
     dst_data = src_data + mask * (dst_data - src_data);
 

@@ -554,7 +554,7 @@ void GUILite::register_cbs(void) {
         }
     );
 
-    static float dt_rate=0.000001;   
+    static float dt_rate = 1e-30;   
     // forward gas model
     ioman.rcb_i(
         iom::IOReq {iom::kb_k('.') , iom::MODE::RELEASE},

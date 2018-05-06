@@ -15,6 +15,16 @@ public:
 private:
     glm::ivec3 size_; // (W, H, L)
 
+    // dynamic texs, rgba -> u, v, w, den
+    union {
+        GLuint texs_[3];
+        struct {
+            GLuint tex___;
+            GLuint tex_0_;
+            GLuint tex_s_;
+        };
+    };
+
 public:
     GLuint get_tex3d(void) { return tex___; }
     glm::ivec3 get_size(void) const { return size_; }
@@ -36,22 +46,6 @@ private:
     float diff_ = 0.01;
     int bnd_type_ = 1;
 
-    // program bindings
-    const char* shader_srcs_[7] = {
-        #include "compute/adsrc.comp"
-        ,
-        #include "compute/advec.comp"
-        ,
-        #include "compute/bound.comp"
-        ,
-        #include "compute/diffu.comp"
-        ,
-        #include "compute/proj0.comp"
-        ,
-        #include "compute/proj1.comp"
-        ,
-        #include "compute/proj2.comp"
-    };
     union {
         GLuint shader_ids_[7];
         struct {
@@ -108,16 +102,6 @@ private:
     GLuint bound_mode_uniloc_; // int
     GLuint bound_mask_uniloc_; // ivec4
     // tex img 0 bounding_tex
-
-    // dynamic texs, rgba -> u, v, w, den
-    union {
-        GLuint texs_[3];
-        struct {
-            GLuint tex___;
-            GLuint tex_0_;
-            GLuint tex_s_;
-        };
-    };
 
 	void make_ellipse(std::vector<glm::vec4>& vels); // for debugging
 };

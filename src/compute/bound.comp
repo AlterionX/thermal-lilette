@@ -14,14 +14,14 @@ void main() {
     vec4 b_data = imageLoad(bounding_tex, loc);
 
     // The crazy things i do to avoid branching
-    if(sup_mode == 0) { // zero out
+    if(mode == 0) { // zero out
         vec4 bounding = imageLoad(bounding_tex, loc);
         // that... was a lot of work to avoid branching
         // basically says that if all are not on edge, keep
-        int is_bound = int(all(bvec3(ivec3(greaterThan(loc, vec4(0))) * ivec3(lessThan(loc, size - 1)))));
-        b_data = b_data - ivec(is_bound) * mask * b_data;
+        int is_bound = int(all(bvec3(ivec3(greaterThan(loc, vec3(0))) * ivec3(lessThan(loc, size - 1)))));
+        b_data = b_data - ivec4(is_bound) * mask * b_data;
     }
-    else if(sup_mode == 1) { // average, velo reflective
+    else if(mode == 1) { // average, velo reflective
         vec4 b_data_2 = b_data;
         int cnt = 0;
 

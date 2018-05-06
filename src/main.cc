@@ -70,28 +70,6 @@ const char* volume_frag_shader =
 #include "shaders/volume.frag"
 ;
 
-void initBindTex3D(GLuint& tex_id, GLuint tex3d, glm::ivec3 size) {
-    gdm::qd([&] GDM_OP {
-        CHECK_GL_ERROR(glGenTextures(1, &tex_id));
-        CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, tex_id));
-        // CHECK_GL_ERROR(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE));
-        CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
-        CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
-        CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER));
-        CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-        CHECK_GL_ERROR(glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-
-        CHECK_GL_ERROR(glBindTexture( GL_TEXTURE_3D, 0));
-
-        std::cout << "register tex3d at " << tex_id << std::endl;
-    });
-}
-
-void updateTex3D(GLuint& tex_id, GLuint tex3d, glm::ivec3 size) {
-    CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, tex_id));
-    CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, 0));
-}
-
 
 int main(int argc, char* argv[]) {
     auto igdm = gdm::GDManager::inst(window_width, window_height, window_title);
@@ -111,11 +89,11 @@ int main(int argc, char* argv[]) {
 
     // Gas Model
     auto gas_model = GasModel(glm::ivec3(32, 32, 32));
-    GLuint gas_raw_tex = gas_model.get_tex3d();
     float focus_layer = 0.0f;
-    GLuint gas_tex_id;
-    initBindTex3D(gas_tex_id, gas_raw_tex, gas_model.get_size());
-    auto gas_cube_meshi = geom::c_plane();
+    auto gas_cube_meshi = geom::c_plane(
+        glm::vec3(0.0f, 0.0f, 0.0f),
+        glm::vec2(32.0f, 32.0f)
+    );
     
     // Data binders
     auto floor_model_mat_data = [&floor_meshi](std::vector<glm::mat4>& data){ data[0] = floor_meshi.m_mat(); }; // This return model matrix for the floor.
@@ -283,12 +261,9 @@ int main(int argc, char* argv[]) {
                 if(gui_lite.gas_dt > 0) {
                     gas_model.simulate_step(gui_lite.gas_dt);
                 }
-                gas_raw_tex = gas_model.get_tex3d();
-                updateTex3D(gas_tex_id, gas_raw_tex, gas_model.get_size());
                 for(focus_layer=-1.0f; focus_layer<=1.0f; focus_layer+=0.005f) {
-                    // std::cout << "render 3d texture: " << focus_layer << std::endl;
                     volume_pass.setup();
-                    CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, gas_tex_id));
+                    CHECK_GL_ERROR(glBindTexture(GL_TEXTURE_3D, gas_model.get_tex3d()));
                     CHECK_GL_ERROR(glDrawElements(
                             GL_TRIANGLES,
                             gas_cube_meshi.m()->g_faces().size() * 3,

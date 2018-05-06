@@ -1,5 +1,5 @@
 R"zzz(#version 430 core
-layout(local_size_x = 1​, local_size_y = 1​, local_size_z = 1) in;
+layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
 
 layout(rgba32f, binding = 0) uniform image3D modify_tex;
 layout(rgba32f, binding = 1) uniform image3D src_dict_tex;
@@ -13,7 +13,7 @@ void main() {
     ivec3 size = ivec3(gl_NumWorkGroups);
 
     vec4 modded = imageLoad(modify_tex, loc);
-    vec4 addition = dt * imageLoad(src_dict_tex, loc);
+    vec4 addition = vec4(imageLoad(src_dict_tex, loc));
 
     modded += addition * mask;
 

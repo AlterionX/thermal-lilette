@@ -12,8 +12,8 @@ TODO: FLIP-FLOP THROUGH THE ITER
 uniform int ff; // 0 or 1
 
 void main() {
-    ivec3 loc = gl_GlobalInvocationID;
-    ivec3 size = gl_NumWorkGroups;
+    ivec3 loc = ivec3(gl_GlobalInvocationID);
+    ivec3 size = ivec3(gl_NumWorkGroups);
 
     int i = loc[0];
     int j = loc[1];
